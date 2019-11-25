@@ -1,3 +1,4 @@
+import csv
 import datetime
 import pandas_datareader.data as dr
 import pandas
@@ -18,7 +19,7 @@ def predict(k, fileName, companyStockName, startDate, endDate):
     trainingSet = []
     testSet = []
     totalSet = 0
-    getStockDataFromFile(fileName, companyStockName, startDate, endDate)
+    getStockDataAndWriteToFile(fileName, companyStockName, startDate, endDate)
 
     print("Predicting for", companyStockName)
     print("Training set: " + repr(len(trainingSet)))
@@ -27,12 +28,29 @@ def predict(k, fileName, companyStockName, startDate, endDate):
     print("Total: " + repr(totalSet))
 
 
-def getStockDataFromFile(fileName, companyStockName, startDate, endDate):
+def getStockDataAndWriteToFile(fileName, companyStockName, startDate, endDate):
     stockData = dr.DataReader(companyStockName, 'yahoo', startDate, endDate)
-    stck_json = stockData.to_json(orient="index", date_format='iso')
-    stck_dates = json.loads(stck_json)
-    plt.plot(stockData["Adj Close"])
-    plt.title("Stock movement of " + companyStockName)
+    stockJson = stockData.to_json(orient="index", date_format='iso')
+    stockDates = json.loads(stockJson)
+
+    # plt.plot(stockData["Adj Close"])
+    # plt.title("Stock movement of " + companyStockName)
+
+    with open(fileName, 'w', newline='') as stockFile:
+        stockWriter = csv.writer(stockFile)
+        sortedDate = sorted(stockDates.keys())
+        for i in sortedDate:
+            formatDate = i[:10]
+            prevClose = stockDates[i]["Adj Close"]
+            stockWriter.writerow(
+                [formatDate] + [stockDates[i]["Open"]] + [stockDates[i]["High"]] + [stockDates[i]["Low"]] + [
+                    stockDates[i]["Adj Close"]] + [change(stockDates[i]["Adj Close"], prevClose)])
+
+
+def change(today, yesterday):
+    if today > yesterday:
+        return 'up'
+    return 'down'
 
 
 main()
