@@ -13,7 +13,7 @@ import json
 # split the data into a trainingdataset and testdataset in ratio of 67/33
 
 def loadDataset(filename, split, trainingSet=[], testSet=[], content_header=[]):
-    with open(filename, 'rb') as csvfile:
+    with open(filename, 'r') as csvfile:
         # returns a reader object which will iterate over lines
         lines = csv.reader(csvfile)
         # dataset is a list of all data, where each item is a line as list
@@ -66,7 +66,7 @@ def getResponse(neighbors):
             classVotes[response] += 1
         else:
             classVotes[response] = 1
-    sortedVotes = sorted(classVotes.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sortedVotes = sorted(classVotes.items(), key=operator.itemgetter(1), reverse=True)
     return sortedVotes[0][0]
 
 
@@ -108,7 +108,7 @@ def getData(filename, stockname, startdate, enddate):
     plt.title("Stock movement of " + stockname)
 
     first_time = True
-    with open(filename, 'wb') as pp:
+    with open(filename, 'w',newline='') as pp:
         stockwriter = csv.writer(pp)
         stp = sorted(stck_dates.keys())
         for i in stp:
@@ -198,15 +198,15 @@ def predict_and_get_accuracy(testSet, trainingSet, k, stockname):
 def main():
     split = 0.67
     # set data
-    startdate = datetime.datetime(2002,1,1)
+    startdate = datetime.datetime(2009,1,1)
     enddate = datetime.date.today()
 
-    predictFor(5, 'amtd.csv', 'AMTD', startdate, enddate, 1, split)
     predictFor(5, 'amazon.csv', 'AMZN', startdate, enddate, 1, split)
-    predictFor(5, 'disney.csv', 'DIS', startdate, enddate, 1, split)
-    predictFor(5, 'sbux.csv', 'SBUX', startdate, enddate, 1, split)
-    predictFor(5, 'twlo.csv', 'TWLO', startdate, enddate, 1, split)
-    predictFor(5, 'twtr.csv', 'TWTR', startdate, enddate, 1, split)
-    predictFor(5, 'yahoo.csv', 'YHOO', startdate, enddate, 1, split)
+    # predictFor(5, 'amtd.csv', 'AMTD', startdate, enddate, 1, split)
+    # predictFor(5, 'disney.csv', 'DIS', startdate, enddate, 1, split)
+    # predictFor(5, 'sbux.csv', 'SBUX', startdate, enddate, 1, split)
+    # predictFor(5, 'twlo.csv', 'TWLO', startdate, enddate, 1, split)
+    # predictFor(5, 'twtr.csv', 'TWTR', startdate, enddate, 1, split)
+    # predictFor(5, 'yahoo.csv', 'YHOO', startdate, enddate, 1, split)
 
 main()
