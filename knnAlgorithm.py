@@ -7,8 +7,9 @@ import pandas_datareader.data as web
 import datetime
 import pandas as pd
 
-import matplotlib.pyplot as plt   # Import matplotlib
+import matplotlib.pyplot as plt  # Import matplotlib
 import json
+
 
 # split the data into a trainingdataset and testdataset in ratio of 67/33
 
@@ -28,7 +29,6 @@ def loadDataset(filename, split, trainingSet=[], testSet=[], content_header=[]):
                 trainingSet.append(dataset[x])
             else:
                 testSet.append(dataset[x])
-
 
 
 def euclideanDistance(instance1, instance2, length):
@@ -75,7 +75,7 @@ def getAccuracy(testSet, predictions):
     for x in range(len(testSet)):
         if testSet[x][-1] == predictions[x]:
             correct += 1
-    return (correct/float(len(testSet))) * 100.0
+    return (correct / float(len(testSet))) * 100.0
 
 
 def getAccuracy1(testSet, predictions):
@@ -83,7 +83,7 @@ def getAccuracy1(testSet, predictions):
     for x in range(len(testSet)):
         if RMSD(testSet[x][-1], predictions[x]) < 1:
             correct += 1
-    return (correct/float(len(testSet))) * 100.0
+    return (correct / float(len(testSet))) * 100.0
 
 
 def RMSD(X, Y):
@@ -94,7 +94,6 @@ def change(today, yest):
     if today > yest:
         return 'up'
     return 'down'
-
 
 
 def getData(filename, stockname, startdate, enddate):
@@ -108,7 +107,7 @@ def getData(filename, stockname, startdate, enddate):
     plt.title("Stock movement of " + stockname)
 
     first_time = True
-    with open(filename, 'w',newline='') as pp:
+    with open(filename, 'w', newline='') as pp:
         stockwriter = csv.writer(pp)
         stp = sorted(stck_dates.keys())
         for i in stp:
@@ -117,7 +116,9 @@ def getData(filename, stockname, startdate, enddate):
                 first_time = False
                 prev_closing = stck_dates[i]["Adj Close"]
                 continue
-            stockwriter.writerow([new_format_date] + [stck_dates[i]["Open"]] +  [stck_dates[i]["High"]] + [stck_dates[i]["Low"]]  +  [stck_dates[i]["Adj Close"]] + [change(stck_dates[i]["Adj Close"], prev_closing)])
+            stockwriter.writerow(
+                [new_format_date] + [stck_dates[i]["Open"]] + [stck_dates[i]["High"]] + [stck_dates[i]["Low"]] + [
+                    stck_dates[i]["Adj Close"]] + [change(stck_dates[i]["Adj Close"], prev_closing)])
             prev_closing = stck_dates[i]["Adj Close"]
 
 
@@ -126,8 +127,10 @@ def abc(filename, stockname, startdate, enddate):
     with open(filename, 'wb') as csvfile:
         stockwriter = csv.writer(csvfile, quotechar=',')
         for ind in range(1, len(apple.Open)):
-            stockwriter.writerow(["open: "] + [apple.Open[ind - 1]] + ["    high: "] + [apple.High[ind - 1]] + ["   low: "] + [apple.Low[ind - 1]] + ["  yester close: "] + [apple['Adj Close'][ind - 1]] + [" volume: "] + [apple.Volume[ind - 1]] + [change(apple['Adj Close'][ind], apple['Adj Close'][ind - 1])])
-
+            stockwriter.writerow(
+                ["open: "] + [apple.Open[ind - 1]] + ["    high: "] + [apple.High[ind - 1]] + ["   low: "] + [
+                    apple.Low[ind - 1]] + ["  yester close: "] + [apple['Adj Close'][ind - 1]] + [" volume: "] + [
+                    apple.Volume[ind - 1]] + [change(apple['Adj Close'][ind], apple['Adj Close'][ind - 1])])
 
 
 def predictFor(k, filename, stockname, startdate, enddate, writeAgain, split):
@@ -172,7 +175,7 @@ def predict_and_get_accuracy(testSet, trainingSet, k, stockname):
     for dates in range(len(testSet)):
         new_date = datetime.datetime.strptime(testSet[dates][0], "%Y-%M-%d")
         row.append(new_date)
-        if predictions[dates]== "down":
+        if predictions[dates] == "down":
             col.append(-1)
         else:
             col.append(1)
@@ -183,7 +186,7 @@ def predict_and_get_accuracy(testSet, trainingSet, k, stockname):
     for dates in range(len(testSet)):
         new_date = datetime.datetime.strptime(testSet[dates][0], "%Y-%M-%d")
         row.append(new_date)
-        if testSet[dates][-1]== "down":
+        if testSet[dates][-1] == "down":
             col.append(-1)
         else:
             col.append(1)
@@ -191,22 +194,22 @@ def predict_and_get_accuracy(testSet, trainingSet, k, stockname):
 
     plt.legend(handles=[predicted_plt, actual_plt])
 
-
     plt.show()
 
 
 def main():
     split = 0.67
     # set data
-    startdate = datetime.datetime(2009,1,1)
+    startdate = datetime.datetime(2014, 1, 1)
     enddate = datetime.date.today()
 
-    predictFor(5, 'amazon.csv', 'AMZN', startdate, enddate, 1, split)
+    predictFor(10, 'amazon.csv', 'AMZN', startdate, enddate, 1, split)
     # predictFor(5, 'amtd.csv', 'AMTD', startdate, enddate, 1, split)
     # predictFor(5, 'disney.csv', 'DIS', startdate, enddate, 1, split)
     # predictFor(5, 'sbux.csv', 'SBUX', startdate, enddate, 1, split)
     # predictFor(5, 'twlo.csv', 'TWLO', startdate, enddate, 1, split)
     # predictFor(5, 'twtr.csv', 'TWTR', startdate, enddate, 1, split)
     # predictFor(5, 'yahoo.csv', 'YHOO', startdate, enddate, 1, split)
+
 
 main()
