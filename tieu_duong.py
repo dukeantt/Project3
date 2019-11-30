@@ -3,15 +3,17 @@ import random
 import math
 import sys
 
+
 # Load data tu CSV file
 
 def load_data(filename):
-    lines = csv.reader(open(filename, "rb"))
+    lines = csv.reader(open(filename, "r"))
     dataset = list(lines)
     for i in range(len(dataset)):
         dataset[i] = [float(x) for x in dataset[i]]
 
     return dataset
+
 
 # Phan chia tap du lieu theo class
 
@@ -25,6 +27,7 @@ def separate_data(dataset):
 
     return separated
 
+
 # Phan chia tap du lieu thanh training va testing. Co the dung train_test_split
 
 def split_data(dataset, splitRatio):
@@ -37,10 +40,12 @@ def split_data(dataset, splitRatio):
 
     return [trainSet, copy]
 
+
 # tinh toan gia tri trung binh cua moi thuoc tinh
 
 def mean(numbers):
     return sum(numbers) / float(len(numbers))
+
 
 # Tinh toan do lech chuan cho tung thuoc tinh
 
@@ -49,6 +54,7 @@ def standard_deviation(numbers):
     variance = sum([pow(x - avg, 2) for x in numbers]) / float(len(numbers) - 1)
 
     return math.sqrt(variance)
+
 
 # Gia tri trung binh , do lech chuan
 
@@ -62,10 +68,11 @@ def summarize(dataset):
 def summarize_by_class(dataset):
     separated = separate_data(dataset)
     summaries = {}
-    for classValue, instances in separated.iteritems():
+    for classValue, instances in separated.items():
         summaries[classValue] = summarize(instances)
 
     return summaries
+
 
 # Tinh toan xac suat theo phan phoi Gause cua bien lien tuc
 # http://sites.nicholas.duke.edu/statsreview/files/2013/06/normpdf1.jpg
@@ -75,10 +82,11 @@ def calculate_prob(x, mean, stdev):
 
     return (1 / (math.sqrt(2 * math.pi) * stdev)) * exponent
 
+
 # Tinh xac suat cho moi thuoc tinh phan chia theo class
 def calculate_class_prob(summaries, inputVector):
     probabilities = {}
-    for classValue, classSummaries in summaries.iteritems():
+    for classValue, classSummaries in summaries.items():
         probabilities[classValue] = 1
         for i in range(len(classSummaries)):
             mean, stdev = classSummaries[i]
@@ -87,17 +95,19 @@ def calculate_class_prob(summaries, inputVector):
 
     return probabilities
 
+
 # Du doan vector thuoc phan lop nao
 
 def predict(summaries, inputVector):
     probabilities = calculate_class_prob(summaries, inputVector)
     bestLabel, bestProb = None, -1
-    for classValue, probability in probabilities.iteritems():
+    for classValue, probability in probabilities.items():
         if bestLabel is None or probability > bestProb:
             bestProb = probability
             bestLabel = classValue
 
     return bestLabel
+
 
 # Du doan tap du lieu testing thuoc vao phan lop nao
 
@@ -109,6 +119,7 @@ def get_predictions(summaries, testSet):
 
     return predictions
 
+
 # Tinh toan do chinh xac cua phan lop
 
 def get_accuracy(testSet, predictions):
@@ -119,6 +130,7 @@ def get_accuracy(testSet, predictions):
 
     return (correct / float(len(testSet))) * 100.0
 
+
 def get_data_label(dataset):
     data = []
     label = []
@@ -128,13 +140,16 @@ def get_data_label(dataset):
 
     return data, label
 
+
 def main():
     filename = 'tieu_duong.csv'
     splitRatio = 0.8
     dataset = load_data(filename)
     trainingSet, testSet = split_data(dataset, splitRatio)
 
-    print('Data size {0} \nTraining Size={1} \nTest Size={2}').format(len(dataset), len(trainingSet), len(testSet))
+    print("Data size: " + repr(len(dataset)))
+    print("Training size: " + repr(len(trainingSet)))
+    print("Test size: " + repr(len(testSet)))
 
     # prepare model
     summaries = summarize_by_class(trainingSet)
@@ -142,7 +157,7 @@ def main():
     # test model
     predictions = get_predictions(summaries, testSet)
     accuracy = get_accuracy(testSet, predictions)
-    print('Accuracy of my implement: {0}%').format(accuracy)
+    print("Accuracy of my implement:", accuracy)
 
     # Compare with sklearn
     dataTrain, labelTrain = get_data_label(trainingSet)
@@ -153,8 +168,7 @@ def main():
     clf.fit(dataTrain, labelTrain)
 
     score = clf.score(dataTest, labelTest)
-
-    print('Accuracy of sklearn: {0}%').format(score*100)
+    print("Accuracy of sklearn:", score * 100)
 
 
 if __name__ == "__main__":
