@@ -42,9 +42,19 @@ def predict(k, fileName, companyStockName, startDate, endDate):
     y_train = y_train[0]
     X_test = X_test[0]
     y_test = y_test[0]
-    predictAndGetAccuracy(X_train, y_train, X_test, y_test, k, companyStockName)
 
-    # predictAndGetAccuracy(trainingSet,testSet,k,companyStockName)
+    noUpInTrainSets = 0
+    noDownInTrainSets = 0
+    for i in range(len(y_train)):
+        if y_train[i] == "up":
+            noUpInTrainSets += 1
+        else:
+            noDownInTrainSets += 1
+
+    p_of_noUpInTrainSets = noUpInTrainSets / len(y_train)
+    p_of_noDownInTrainSets = noDownInTrainSets / len(y_train)
+    predictAndGetAccuracy(X_train, y_train, X_test, y_test, k, companyStockName, p_of_noUpInTrainSets,
+                          p_of_noDownInTrainSets)
 
 
 def getStockDataAndWriteToFile(fileName, companyStockName, startDate, endDate):
@@ -103,15 +113,22 @@ def loadData(fileName, trainingSet=[], testSet=[], X_train=[], y_train=[], X_tes
         y_test.append(ytest)
 
 
-def predictAndGetAccuracy(X_train, y_train, X_test, y_test, k, companyStockName):
+def predictAndGetAccuracy(X_train, y_train, X_test, y_test, k, companyStockName, p_of_noUpInTrainSets,
+                          p_of_noDownInTrainSets):
     predictions = []
+    predictions_knn_probabilistic = []
     for x in range(len(y_test)):
         neighbors = getNeighbors(X_train, y_train, X_test[x], y_test[x], k)
         result = getResponse(neighbors)
+        result_knn_probabilistic = getResponse_knn_probabilistic(neighbors, p_of_noUpInTrainSets, p_of_noDownInTrainSets)
         predictions.append(result)
+        predictions_knn_probabilistic.append(result_knn_probabilistic)
 
     accuracy = getAccuracy(y_test, predictions)
+    accuracy_of_knn_prob = getAccuracy(y_test, predictions_knn_probabilistic)
+    print('Similarty: ' + repr(getAccuracy(predictions,predictions_knn_probabilistic))+ '%')
     print('Accuracy: ' + repr(accuracy) + '%')
+    print('Accuracy of knn probabilistic: ' + repr(accuracy_of_knn_prob) + '%')
 
 
 def getNeighbors(X_train, y_train, X_test, y_test, k):
@@ -119,12 +136,10 @@ def getNeighbors(X_train, y_train, X_test, y_test, k):
     for x in range(len(y_train)):
         dist = euclideanDistance(X_train[x], y_train[x], X_test, y_test)
         distance.append((X_train[x], y_train[x], dist))
-
     distance.sort(key=operator.itemgetter(2))
     neighbors = []
     for x in range(k):
         neighbors.append((distance[x][0], distance[x][1]))
-
     return neighbors
 
 
@@ -146,6 +161,27 @@ def getResponse(neighbors):
             votes[response] = 1
     sortedVotes = sorted(votes.items(), key=operator.itemgetter(1), reverse=True)
     return sortedVotes[0][0]
+
+
+def getResponse_knn_probabilistic(neighbors, p_of_noUpInTrainSets, p_of_noDownInTrainSets):
+    noUpInNeighbors = 0
+    noDownInNeighbors = 0
+    for i in range(len(neighbors)):
+        if  neighbors[i][1] == 'up':
+            noUpInNeighbors += 1
+        else:
+            noDownInNeighbors += 1
+
+    p_of_noUpInNeighbors = noUpInNeighbors / len(neighbors)
+    p_of_noDownInNeighbors = noDownInNeighbors / len(neighbors)
+
+    joint_probability_up = p_of_noUpInTrainSets * p_of_noUpInNeighbors
+    joint_probability_down = p_of_noDownInTrainSets * p_of_noDownInNeighbors
+
+    if  joint_probability_down > joint_probability_up:
+        return 'down'
+    else:
+        return 'up'
 
 
 def getAccuracy(y_test, predictions):
