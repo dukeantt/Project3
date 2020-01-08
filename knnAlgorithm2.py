@@ -33,15 +33,15 @@ def predict(k, fileName, companyStockName, startDate, endDate):
     loadData(fileName, trainingSet, testSet, X_train, y_train, X_test, y_test, attributes)
 
     print("Predicting for", companyStockName)
-    print("Training set: " + repr(len(y_train[0])))
-    print("Test set: " + repr(len(y_test[0])))
+    print("Training set: " + repr(len(y_train)))
+    print("Test set: " + repr(len(y_test)))
     totalSet += len(trainingSet) + len(testSet)
     print("Total: " + repr(totalSet))
 
-    X_train = X_train[0]
-    y_train = y_train[0]
-    X_test = X_test[0]
-    y_test = y_test[0]
+    # X_train = X_train[0]
+    # y_train = y_train[0]
+    # X_test = X_test[0]
+    # y_test = y_test[0]
 
     noUpInTrainSets = 0
     noDownInTrainSets = 0
@@ -53,7 +53,8 @@ def predict(k, fileName, companyStockName, startDate, endDate):
 
     p_of_noUpInTrainSets = noUpInTrainSets / len(y_train)
     p_of_noDownInTrainSets = noDownInTrainSets / len(y_train)
-    predictAndGetAccuracy(X_train, y_train, X_test, y_test, k, companyStockName, p_of_noUpInTrainSets,
+    predictAndGetAccuracy(trainingSet, testSet, X_train, y_train, X_test, y_test, k, companyStockName,
+                          p_of_noUpInTrainSets,
                           p_of_noDownInTrainSets)
 
 
@@ -91,11 +92,7 @@ def loadData(fileName, trainingSet=[], testSet=[], X_train=[], y_train=[], X_tes
         lines = csv.reader(stockFile)
         split = 0.67
         dataset = list(lines)
-        # minus 1 because we are predicting for next day
-        # split stock data set to training set and test set
-        for x in range(len(dataset) - 1):
-            # convert the content to float
-            # minus 1 because last is string for up or down
+        for x in range(len(dataset)):
             for y in range(1, len(attributes) - 1):
                 dataset[x][y] = float(dataset[x][y])
             stock_y.append(dataset[x][-1])
@@ -105,30 +102,100 @@ def loadData(fileName, trainingSet=[], testSet=[], X_train=[], y_train=[], X_tes
             else:
                 testSet.append(dataset[x])
 
-        Xtrain, Xtest, ytrain, ytest = train_test_split(stock_X, stock_y, test_size=0.33)
+        for y in range(len(trainingSet)):
+            X_train.append(trainingSet[y][: len(trainingSet[y]) - 1])
+            y_train.append(trainingSet[y][-1])
 
-        X_train.append(Xtrain)
-        y_train.append(ytrain)
-        X_test.append(Xtest)
-        y_test.append(ytest)
+        for z in range(len(testSet)):
+            X_test.append(testSet[z][: len(testSet[z]) - 1])
+            y_test.append(testSet[z][-1])
+
+        # Xtrain, Xtest, ytrain, ytest = train_test_split(stock_X, stock_y, test_size=0.33)
+        # X_train.append(Xtrain)
+        # y_train.append(ytrain)
+        # X_test.append(Xtest)
+        # y_test.append(ytest)
 
 
-def predictAndGetAccuracy(X_train, y_train, X_test, y_test, k, companyStockName, p_of_noUpInTrainSets,
+def predictAndGetAccuracy(trainingSet, testSet, X_train, y_train, X_test, y_test, k, companyStockName,
+                          p_of_noUpInTrainSets,
                           p_of_noDownInTrainSets):
     predictions = []
     predictions_knn_probabilistic = []
     for x in range(len(y_test)):
         neighbors = getNeighbors(X_train, y_train, X_test[x], y_test[x], k)
         result = getResponse(neighbors)
-        result_knn_probabilistic = getResponse_knn_probabilistic(neighbors, p_of_noUpInTrainSets, p_of_noDownInTrainSets)
+        result_knn_probabilistic = getResponse_knn_probabilistic(neighbors, p_of_noUpInTrainSets,
+                                                                 p_of_noDownInTrainSets)
         predictions.append(result)
         predictions_knn_probabilistic.append(result_knn_probabilistic)
 
     accuracy = getAccuracy(y_test, predictions)
     accuracy_of_knn_prob = getAccuracy(y_test, predictions_knn_probabilistic)
-    print('Similarty: ' + repr(getAccuracy(predictions,predictions_knn_probabilistic))+ '%')
-    print('Accuracy: ' + repr(accuracy) + '%')
+    # print('Similarty: ' + repr(getAccuracy(predictions, predictions_knn_probabilistic)) + '%')
+    # print('Accuracy: ' + repr(accuracy) + '%')
     print('Accuracy of knn probabilistic: ' + repr(accuracy_of_knn_prob) + '%')
+
+    # drawing another
+    plt.figure(1)
+    plt.title("Prediction trend of Amazon")
+    x = []
+    y = []
+    p = 0
+    for dates in range(len(testSet)):
+        if dates < 10:
+            p += 1
+            new_date = datetime.datetime.strptime(testSet[dates][0], "%Y-%M-%d")
+            # row.append(new_date)
+            x.append(p)
+            if predictions[dates] == "down":
+                y.append(-1)
+            else:
+                y.append(1)
+    plt.plot(x, y, 'r', label="Predicted Trend")
+    plt.show()
+
+    plt.figure(2)
+    plt.title("Actual trend of Amazon")
+    x = []
+    y = []
+    for dates in range(len(testSet)):
+        if dates < 10:
+            new_date = datetime.datetime.strptime(testSet[dates][0], "%Y-%M-%d")
+            x.append(new_date)
+            if testSet[dates][-1] == "down":
+                y.append(-1)
+            else:
+                y.append(1)
+    plt.plot(x, y, 'b', label="Actual Trend")
+    plt.show()
+
+    plt.figure(3)
+    plt.title("Prediction vs Actual Trend of Amazon ")
+    plt.legend(loc="best")
+    row = []
+    col = []
+    for dates in range(len(testSet)):
+        new_date = datetime.datetime.strptime(testSet[dates][0], "%Y-%M-%d")
+        row.append(new_date)
+        if predictions[dates] == "down":
+            col.append(-1)
+        else:
+            col.append(1)
+    predicted_plt, = plt.plot(row, col, 'r', label="Predicted Trend")
+
+    row = []
+    col = []
+    for dates in range(len(testSet)):
+        new_date = datetime.datetime.strptime(testSet[dates][0], "%Y-%M-%d")
+        row.append(new_date)
+        if testSet[dates][-1] == "down":
+            col.append(-1)
+        else:
+            col.append(1)
+    actual_plt, = plt.plot(row, col, 'b', label="Actual Trend")
+    plt.legend(handles=[predicted_plt, actual_plt])
+    plt.show()
 
 
 def getNeighbors(X_train, y_train, X_test, y_test, k):
@@ -167,7 +234,7 @@ def getResponse_knn_probabilistic(neighbors, p_of_noUpInTrainSets, p_of_noDownIn
     noUpInNeighbors = 0
     noDownInNeighbors = 0
     for i in range(len(neighbors)):
-        if  neighbors[i][1] == 'up':
+        if neighbors[i][1] == 'up':
             noUpInNeighbors += 1
         else:
             noDownInNeighbors += 1
@@ -178,7 +245,7 @@ def getResponse_knn_probabilistic(neighbors, p_of_noUpInTrainSets, p_of_noDownIn
     joint_probability_up = p_of_noUpInTrainSets * p_of_noUpInNeighbors
     joint_probability_down = p_of_noDownInTrainSets * p_of_noDownInNeighbors
 
-    if  joint_probability_down > joint_probability_up:
+    if joint_probability_down > joint_probability_up:
         return 'down'
     else:
         return 'up'
